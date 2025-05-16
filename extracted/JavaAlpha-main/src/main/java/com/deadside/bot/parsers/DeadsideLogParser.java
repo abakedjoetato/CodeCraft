@@ -36,16 +36,8 @@ public class DeadsideLogParser {
     
     // Regex patterns for different event types
     private static final Pattern TIMESTAMP_PATTERN = Pattern.compile("\\[(\\d{4}\\.\\d{2}\\.\\d{2}-\\d{2}\\.\\d{2}\\.\\d{2}:\\d{3})\\]\\[\\s*\\d+\\]");
-    
-    // Updated patterns based on actual log format
-    private static final Pattern PLAYER_JOIN_PATTERN = Pattern.compile("LogOnline: Warning: Player \\|(.+?) successfully registered!");
-    private static final Pattern PLAYER_LEAVE_PATTERN = Pattern.compile("LogOnline: Warning: Player \\|(.+?) successfully unregistered from the session.");
-    private static final Pattern PLAYER_QUEUE_PATTERN = Pattern.compile("LogNet: Warning: Player (.+?) joined the queue");
-    private static final Pattern PLAYER_CONNECTION_TIMEOUT = Pattern.compile("LogNet: Warning: UNetConnection::Tick: Connection TIMED OUT.+UniqueId: EOS:\\|(.+?)($|,)");
-    
-    // Legacy patterns (keeping for backward compatibility)
-    private static final Pattern LEGACY_PLAYER_JOIN_PATTERN = Pattern.compile("LogSFPS: \\[Login\\] Player (.+?) connected");
-    private static final Pattern LEGACY_PLAYER_LEAVE_PATTERN = Pattern.compile("LogSFPS: \\[Logout\\] Player (.+?) disconnected");
+    private static final Pattern PLAYER_JOIN_PATTERN = Pattern.compile("LogSFPS: \\[Login\\] Player (.+?) connected");
+    private static final Pattern PLAYER_LEAVE_PATTERN = Pattern.compile("LogSFPS: \\[Logout\\] Player (.+?) disconnected");
     private static final Pattern PLAYER_KILLED_PATTERN = Pattern.compile("LogSFPS: \\[Kill\\] (.+?) killed (.+?) with (.+?) at distance (\\d+)");
     private static final Pattern PLAYER_DIED_PATTERN = Pattern.compile("LogSFPS: \\[Death\\] (.+?) died from (.+?)");
     private static final Pattern AIRDROP_PATTERN = Pattern.compile("LogSFPS: AirDrop switched to (\\w+)");
@@ -159,7 +151,7 @@ public class DeadsideLogParser {
                 timestamp = timestampMatcher.group(1);
             }
             
-            // Player join events - new format
+            // Player join events
             Matcher joinMatcher = PLAYER_JOIN_PATTERN.matcher(line);
             if (joinMatcher.find()) {
                 String playerName = joinMatcher.group(1).trim();
@@ -169,52 +161,13 @@ public class DeadsideLogParser {
                 continue;
             }
             
-            // Player join events - legacy format
-            Matcher legacyJoinMatcher = LEGACY_PLAYER_JOIN_PATTERN.matcher(line);
-            if (legacyJoinMatcher.find()) {
-                String playerName = legacyJoinMatcher.group(1).trim();
-                joinedPlayers.add(playerName);
-                // Process individually for immediate notification
-                sendPlayerJoinNotification(server, playerName, timestamp);
-                continue;
-            }
-            
-            // Player leave events - new format
+            // Player leave events
             Matcher leaveMatcher = PLAYER_LEAVE_PATTERN.matcher(line);
             if (leaveMatcher.find()) {
                 String playerName = leaveMatcher.group(1).trim();
                 leftPlayers.add(playerName);
                 // Process individually for immediate notification
                 sendPlayerLeaveNotification(server, playerName, timestamp);
-                continue;
-            }
-            
-            // Player leave events - legacy format
-            Matcher legacyLeaveMatcher = LEGACY_PLAYER_LEAVE_PATTERN.matcher(line);
-            if (legacyLeaveMatcher.find()) {
-                String playerName = legacyLeaveMatcher.group(1).trim();
-                leftPlayers.add(playerName);
-                // Process individually for immediate notification
-                sendPlayerLeaveNotification(server, playerName, timestamp);
-                continue;
-            }
-            
-            // Connection timeout events (player disconnected unexpectedly)
-            Matcher timeoutMatcher = PLAYER_CONNECTION_TIMEOUT.matcher(line);
-            if (timeoutMatcher.find()) {
-                String playerName = timeoutMatcher.group(1).trim();
-                leftPlayers.add(playerName);
-                // Process individually for immediate notification with special message
-                sendPlayerTimeoutNotification(server, playerName, timestamp);
-                continue;
-            }
-            
-            // Player queue events
-            Matcher queueMatcher = PLAYER_QUEUE_PATTERN.matcher(line);
-            if (queueMatcher.find()) {
-                String playerName = queueMatcher.group(1).trim();
-                // Send queue notification
-                sendPlayerQueueNotification(server, playerName, timestamp);
                 continue;
             }
             
@@ -368,44 +321,6 @@ public class DeadsideLogParser {
                 .setTitle("Player Disconnected")
                 .setDescription(playerName + " has left the server")
                 .setColor(Color.RED)
-                .setTimestamp(new Date().toInstant());
-        
-        if (!timestamp.isEmpty()) {
-            embed.setFooter(timestamp + " • " + server.getName(), null);
-        } else {
-            embed.setFooter(server.getName(), null);
-        }
-        
-        sendToLogChannel(server, embed.build());
-    }
-    
-    /**
-     * Send notification for player connection timeout
-     */
-    private void sendPlayerTimeoutNotification(GameServer server, String playerName, String timestamp) {
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("Player Connection Timeout")
-                .setDescription(playerName + " has disconnected due to connection timeout")
-                .setColor(Color.ORANGE)
-                .setTimestamp(new Date().toInstant());
-        
-        if (!timestamp.isEmpty()) {
-            embed.setFooter(timestamp + " • " + server.getName(), null);
-        } else {
-            embed.setFooter(server.getName(), null);
-        }
-        
-        sendToLogChannel(server, embed.build());
-    }
-    
-    /**
-     * Send notification for player in queue
-     */
-    private void sendPlayerQueueNotification(GameServer server, String playerName, String timestamp) {
-        EmbedBuilder embed = new EmbedBuilder()
-                .setTitle("Player Joined Queue")
-                .setDescription(playerName + " has entered the server queue")
-                .setColor(Color.YELLOW)
                 .setTimestamp(new Date().toInstant());
         
         if (!timestamp.isEmpty()) {
