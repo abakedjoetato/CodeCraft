@@ -32,6 +32,10 @@ public class EventParserTest {
     private static final Pattern WANDERING_TRADER_PATTERN = Pattern.compile("LogSFPS: WanderingTrader (spawned|arrived) at (.+)");
     private static final Pattern DYNAMIC_EVENT_PATTERN = Pattern.compile("LogSFPS: DynamicEvent (.+?) (started|ended|activated)");
     
+    // New event patterns
+    private static final Pattern GAMEPLAY_EVENT_PATTERN = Pattern.compile("LogSFPS: GameplayEvent (.+?) switched to (\\w+)");
+    private static final Pattern HELICRASH_EVENT_PATTERN = Pattern.compile("LogSFPS: GameplayEvent (HelicrashManager.+?)HelicrashEvent.+? switched to (\\w+)");
+    
     // Event state constants
     private static final String STATE_AIRDROP_FLYING = "Flying";
     private static final String STATE_AIRDROP_DROPPING = "Dropping";
@@ -67,6 +71,8 @@ public class EventParserTest {
         eventCounts.put("Convoy Events", 0);
         eventCounts.put("Wandering Trader Events", 0);
         eventCounts.put("Dynamic Events", 0);
+        eventCounts.put("Gameplay Events", 0);
+        eventCounts.put("HeliCrash Events", 0);
         
         // Mission level counter
         Map<Integer, Integer> missionLevelCount = new HashMap<>();
@@ -227,6 +233,34 @@ public class EventParserTest {
                     System.out.println("Dynamic Event at line " + lineCount + ": " + line);
                     continue;
                 }
+                
+                // GameplayEvents - New pattern
+                Matcher gameplayEventMatcher = GAMEPLAY_EVENT_PATTERN.matcher(line);
+                if (gameplayEventMatcher.find()) {
+                    String eventName = gameplayEventMatcher.group(1).trim();
+                    String status = gameplayEventMatcher.group(2).trim();
+                    eventCounts.put("Gameplay Events", eventCounts.get("Gameplay Events") + 1);
+                    
+                    // Only output when events become active
+                    if (status.equalsIgnoreCase("ACTIVE") || status.equalsIgnoreCase("STARTED")) {
+                        System.out.println("Gameplay Event ACTIVE: " + eventName + " at line " + lineCount);
+                    }
+                    continue;
+                }
+                
+                // HeliCrash events - New pattern
+                Matcher helicrashEventMatcher = HELICRASH_EVENT_PATTERN.matcher(line);
+                if (helicrashEventMatcher.find()) {
+                    String eventName = helicrashEventMatcher.group(1).trim();
+                    String status = helicrashEventMatcher.group(2).trim();
+                    eventCounts.put("HeliCrash Events", eventCounts.get("HeliCrash Events") + 1);
+                    
+                    // Only output when events become active
+                    if (status.equalsIgnoreCase("ACTIVE") || status.equalsIgnoreCase("STARTED")) {
+                        System.out.println("HeliCrash Event ACTIVE: " + eventName + " at line " + lineCount);
+                    }
+                    continue;
+                }
             }
             
             // Print summary of all events found
@@ -263,6 +297,8 @@ public class EventParserTest {
             System.out.println("- Convoy Events: " + eventCounts.get("Convoy Events"));
             System.out.println("- Wandering Trader Events: " + eventCounts.get("Wandering Trader Events"));
             System.out.println("- Dynamic Events: " + eventCounts.get("Dynamic Events"));
+            System.out.println("- Gameplay Events: " + eventCounts.get("Gameplay Events"));
+            System.out.println("- HeliCrash Events: " + eventCounts.get("HeliCrash Events"));
             
             System.out.println("\nDetailed Mission Events (Active & Completed):");
             for (String detail : missionEventsDetails) {
