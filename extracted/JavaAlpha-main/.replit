@@ -1,0 +1,88 @@
+modules = ["java", "java-17"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["maven"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "DeadsideBot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "java_bot_workflow"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "test_parser"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "enhanced_test_parser"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "run_event_tester"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "run_log_analyzer"
+
+[[workflows.workflow]]
+name = "DeadsideBot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean compile exec:java -Dexec.mainClass=\"com.deadside.bot.Main\""
+
+[[workflows.workflow]]
+name = "java_bot_workflow"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn clean compile && mvn exec:java -Dexec.mainClass=\"com.deadside.bot.Main\""
+
+[[workflows.workflow]]
+name = "test_parser"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn compile exec:java -Dexec.mainClass=\"com.deadside.bot.TestRunner\""
+
+[[workflows.workflow]]
+name = "enhanced_test_parser"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn compile exec:java -Dexec.mainClass=\"com.deadside.bot.TestRunner\""
+
+[[workflows.workflow]]
+name = "run_event_tester"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn compile exec:java -Dexec.mainClass=\"com.deadside.bot.DeadsideLogEventTester\""
+
+[[workflows.workflow]]
+name = "run_log_analyzer"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "mvn compile exec:java -Dexec.mainClass=\"com.deadside.bot.SimpleLogTester\""
+
+[deployment]
+run = ["sh", "-c", "mvn clean compile exec:java -Dexec.mainClass=\"com.deadside.bot.Main\""]

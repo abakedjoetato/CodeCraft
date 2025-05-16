@@ -1,0 +1,40 @@
+modules = ["java"]
+
+[nix]
+channel = "stable-24_05"
+packages = ["unzip", "maven", "openjdk"]
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "JavaDiscordBot"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "setup_and_run_discord_bot"
+
+[[workflows.workflow]]
+name = "JavaDiscordBot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cp attached_assets/JavaAlpha-main.zip . && chmod +x setup.sh run.sh && ./setup.sh && ./run.sh"
+
+[[workflows.workflow]]
+name = "setup_and_run_discord_bot"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cp attached_assets/JavaAlpha-main.zip . && chmod +x setup.sh run.sh && ./setup.sh && ./run.sh"
+
+[deployment]
+run = ["sh", "-c", "cp attached_assets/JavaAlpha-main.zip . && chmod +x setup.sh run.sh && ./setup.sh && ./run.sh"]
