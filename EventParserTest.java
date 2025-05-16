@@ -35,6 +35,7 @@ public class EventParserTest {
     // New event patterns
     private static final Pattern GAMEPLAY_EVENT_PATTERN = Pattern.compile("LogSFPS: GameplayEvent (.+?) switched to (\\w+)");
     private static final Pattern HELICRASH_EVENT_PATTERN = Pattern.compile("LogSFPS: GameplayEvent (HelicrashManager.+?)HelicrashEvent.+? switched to (\\w+)");
+    private static final Pattern ROAMING_TRADER_EVENT_PATTERN = Pattern.compile("LogSFPS: GameplayEvent (RoamingTraderManager.+?)RoamingTraderEvent.+? switched to (\\w+)");
     
     // Event state constants
     private static final String STATE_AIRDROP_FLYING = "Flying";
@@ -73,6 +74,7 @@ public class EventParserTest {
         eventCounts.put("Dynamic Events", 0);
         eventCounts.put("Gameplay Events", 0);
         eventCounts.put("HeliCrash Events", 0);
+        eventCounts.put("Roaming Trader Events", 0);
         
         // Mission level counter
         Map<Integer, Integer> missionLevelCount = new HashMap<>();
@@ -258,6 +260,20 @@ public class EventParserTest {
                     // Only output when events become active
                     if (status.equalsIgnoreCase("ACTIVE") || status.equalsIgnoreCase("STARTED")) {
                         System.out.println("HeliCrash Event ACTIVE: " + eventName + " at line " + lineCount);
+                    }
+                    continue;
+                }
+                
+                // Roaming Trader events - New pattern
+                Matcher roamingTraderEventMatcher = ROAMING_TRADER_EVENT_PATTERN.matcher(line);
+                if (roamingTraderEventMatcher.find()) {
+                    String eventName = roamingTraderEventMatcher.group(1).trim();
+                    String status = roamingTraderEventMatcher.group(2).trim();
+                    eventCounts.put("Roaming Trader Events", eventCounts.get("Roaming Trader Events") + 1);
+                    
+                    // Only output when trader becomes active
+                    if (status.equalsIgnoreCase("ACTIVE")) {
+                        System.out.println("Roaming Trader ACTIVE: " + eventName + " at line " + lineCount);
                     }
                     continue;
                 }
