@@ -2,7 +2,7 @@ modules = ["java"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["unzip", "maven", "openjdk"]
+packages = ["unzip", "maven", "openjdk", "mongodb"]
 
 [workflows]
 runButton = "Project"
